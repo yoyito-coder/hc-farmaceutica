@@ -47,6 +47,8 @@ h3{font-size:15px;margin:0 0 12px}
 .btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink);font-weight:600}
 .btn.primary:hover{filter:brightness(1.07)}
 .btn.ghost{background:transparent}
+.btn.accent{background:var(--primary-soft);border-color:var(--primary);color:var(--primary);font-weight:600}
+.btn.accent:hover{filter:brightness(.97)}
 .btn.small{padding:4px 9px;font-size:13px}
 .btn.add{margin-top:10px;border-style:dashed;color:var(--primary)}
 .menu{position:relative}

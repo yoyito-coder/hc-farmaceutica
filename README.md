@@ -20,6 +20,19 @@ Formato interactivo de **historia clínica farmacéutica** para químicos farmac
 | 10. Nota SOAP | Borrador automático a partir de los datos, editable. |
 | 11. Informe y exportación | Resumen, revisión del tutor y exportación. |
 
+### ⚡ Análisis automático
+
+El botón **Analizar caso** usa los datos registrados para:
+
+1. **Conciliar**: completa decisión y tipo de discrepancia (continuar, iniciar, omisión, cambio de dosis) y marca medicamentos de alto riesgo.
+2. **Identificar PRM**: convierte las alertas de nivel alto y medio en PRM con categoría, tipo, causa, RNM, severidad, prioridad e intervención sugerida.
+3. **PAF**: un plan por diagnóstico con objetivo, tratamiento actual, intervenciones de los PRM relacionados y parámetros de monitoreo.
+4. **Plan de monitoreo**: paraclínicos alterados y parámetros de PAF y PRM.
+5. **Nota de evolución SOAP**.
+6. **Plan de egreso, si corresponde**: horario, para qué sirve, efectos adversos y cuándo consultar, más recomendaciones de dieta, señales de alarma y uso de medicamentos. Se genera si “Egreso previsto” es Sí/En evaluación o, si no se indica, cuando no hay problemas agudos en progresión o sin control.
+
+No borra lo que escribió el usuario (excepto la nota SOAP, que se regenera): completa campos vacíos, agrega PRM nuevos sin duplicar y regenera solo las filas automáticas. Todo lo generado es una propuesta que el químico farmacéutico debe verificar; los PRM generados llevan la etiqueta “Automático · verificar”.
+
 ### Alertas automáticas (orientativas)
 
 - Conciliación: omisiones, medicamentos sin decisión, discrepancias no justificadas.

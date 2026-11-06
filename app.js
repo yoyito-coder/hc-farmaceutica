@@ -116,33 +116,67 @@ G.sraa = [...G.ieca, ...G.ara2];
 G.litioInt = [...G.ieca, ...G.ara2, ...G.aine, ...G.tiazida];
 const inG = (m, g) => (G[g] || [g]).some(k => hasKw(m.nombre, k));
 
+/* [grupo 1, grupo 2, nivel, riesgo, intervención sugerida, parámetro, meta] */
+const SANGRADO = ['Signos de sangrado, hemoglobina', 'Sin sangrado; Hb estable'];
 const INTER = [
-  ['anticoag', 'aine', 'alta', 'Anticoagulante + AINE: aumento del riesgo de sangrado. Evitar o usar gastroprotección y vigilar.'],
-  ['anticoag', 'antiagreg', 'alta', 'Anticoagulante + antiagregante: aumento del riesgo de sangrado. Verificar indicación de la combinación.'],
-  ['anticoag', 'dipirona', 'media', 'Anticoagulante + metamizol: posible aumento del riesgo de sangrado. Vigilar signos de sangrado y hemograma.'],
-  ['anticoag', 'isrs', 'media', 'ISRS/IRSN + anticoagulante: aumento del riesgo de sangrado.'],
-  ['warfarina', 'inh3a4', 'alta', 'Warfarina + inhibidor enzimático (macrólido/azol): riesgo de INR elevado. Monitorizar INR estrechamente.'],
-  ['warfarina', 'potenWarf', 'alta', 'Warfarina + TMP-SMX/metronidazol: potenciación del efecto anticoagulante. Monitorizar INR.'],
-  ['warfarina', 'amiodarona', 'alta', 'Warfarina + amiodarona: suele requerir reducir la dosis de warfarina 30–50 % y monitorizar INR.'],
-  ['sraa', 'ahk', 'alta', 'IECA/ARA-II + diurético ahorrador de K: riesgo de hiperpotasemia. Monitorizar K+ y función renal.'],
-  ['sraa', 'potasio', 'alta', 'IECA/ARA-II + suplemento de potasio: riesgo de hiperpotasemia.'],
-  ['ieca', 'ara2', 'alta', 'IECA + ARA-II (doble bloqueo SRAA): hiperpotasemia, hipotensión e IRA. Generalmente no recomendado.'],
-  ['sraa', 'aine', 'media', 'IECA/ARA-II + AINE: riesgo de lesión renal aguda y menor efecto antihipertensivo (mayor si hay diurético).'],
-  ['clopidogrel', 'ibp2c19', 'media', 'Clopidogrel + omeprazol/esomeprazol: menor activación de clopidogrel. Preferir pantoprazol.'],
-  ['opioide', 'benzo', 'alta', 'Opioide + benzodiacepina: sedación profunda y depresión respiratoria.'],
-  ['tramadol', 'isrs', 'alta', 'Tramadol + ISRS/IRSN: riesgo de síndrome serotoninérgico y convulsiones.'],
-  ['estatina34', 'inh3a4', 'alta', 'Simva/atorva/lovastatina + inhibidor de CYP3A4: riesgo de miopatía/rabdomiólisis.'],
-  ['digoxina', 'amiodarona', 'alta', 'Digoxina + amiodarona: aumento de digoxinemia. Reducir dosis y monitorizar niveles.'],
-  ['litio', 'litioInt', 'alta', 'Litio + IECA/ARA-II/AINE/tiazida: puede elevar la litemia. Monitorizar niveles.'],
-  ['levotiroxina', 'quelantes', 'media', 'Levotiroxina + calcio/hierro/antiácidos: menor absorción. Separar al menos 4 horas.'],
-  ['levotiroxina', 'ibp', 'baja', 'Levotiroxina + IBP: posible menor absorción. Vigilar TSH.'],
-  ['quinolona', 'quelantes', 'media', 'Quinolona + cationes (Ca, Fe, Mg, Al): menor absorción. Dar la quinolona 2 h antes o 6 h después.'],
-  ['metotrexato', 'aine', 'alta', 'Metotrexato + AINE: aumento de la toxicidad de metotrexato.'],
-  ['metotrexato', 'tmpsmx', 'alta', 'Metotrexato + TMP-SMX: riesgo de mielotoxicidad.'],
-  ['asa_diur', 'aminoglucosido', 'media', 'Diurético de asa + aminoglucósido: mayor oto y nefrotoxicidad.'],
-  ['vancomicina', 'piperacilina', 'media', 'Vancomicina + piperacilina/tazobactam: mayor riesgo de lesión renal aguda. Monitorizar creatinina.'],
-  ['qt', 'qt', 'media', 'Dos o más medicamentos que prolongan el QT. Considerar ECG y control de K+/Mg2+.']
+  ['anticoag', 'aine', 'alta', 'Anticoagulante + AINE: aumento del riesgo de sangrado. Evitar o usar gastroprotección y vigilar.', 'Suspender el AINE y preferir acetaminofén para el dolor.', ...SANGRADO],
+  ['anticoag', 'antiagreg', 'alta', 'Anticoagulante + antiagregante: aumento del riesgo de sangrado. Verificar indicación de la combinación.', 'Confirmar la indicación de la terapia combinada; si no existe, suspender el antiagregante. Considerar gastroprotección con IBP.', ...SANGRADO],
+  ['anticoag', 'dipirona', 'media', 'Anticoagulante + metamizol: posible aumento del riesgo de sangrado. Vigilar signos de sangrado y hemograma.', 'Preferir acetaminofén; si se mantiene metamizol, vigilar sangrado y hemograma.', ...SANGRADO],
+  ['anticoag', 'isrs', 'media', 'ISRS/IRSN + anticoagulante: aumento del riesgo de sangrado.', 'Vigilar sangrado y considerar gastroprotección.', ...SANGRADO],
+  ['warfarina', 'inh3a4', 'alta', 'Warfarina + inhibidor enzimático (macrólido/azol): riesgo de INR elevado. Monitorizar INR estrechamente.', 'Sustituir el inhibidor por una alternativa sin interacción (p. ej., azitromicina en lugar de claritromicina) o reducir la dosis de warfarina; INR diario.', 'INR y signos de sangrado', 'INR 2–3'],
+  ['warfarina', 'potenWarf', 'alta', 'Warfarina + TMP-SMX/metronidazol: potenciación del efecto anticoagulante. Monitorizar INR.', 'Sustituir por un antimicrobiano sin interacción o reducir la dosis de warfarina; INR diario.', 'INR y signos de sangrado', 'INR 2–3'],
+  ['warfarina', 'amiodarona', 'alta', 'Warfarina + amiodarona: suele requerir reducir la dosis de warfarina 30–50 % y monitorizar INR.', 'Reducir la dosis de warfarina 30–50 % y controlar INR.', 'INR', 'INR 2–3'],
+  ['sraa', 'ahk', 'alta', 'IECA/ARA-II + diurético ahorrador de K: riesgo de hiperpotasemia. Monitorizar K+ y función renal.', 'Suspender temporalmente el ahorrador de potasio si K+ > 5,0 mEq/L o CrCl < 30 mL/min; controlar K+.', 'Potasio sérico y creatinina', 'K+ 3,5–5,0 mEq/L'],
+  ['sraa', 'potasio', 'alta', 'IECA/ARA-II + suplemento de potasio: riesgo de hiperpotasemia.', 'Suspender el suplemento de potasio salvo hipopotasemia documentada.', 'Potasio sérico', 'K+ 3,5–5,0 mEq/L'],
+  ['ieca', 'ara2', 'alta', 'IECA + ARA-II (doble bloqueo SRAA): hiperpotasemia, hipotensión e IRA. Generalmente no recomendado.', 'Suspender uno de los dos (evitar el doble bloqueo del SRAA).', 'Potasio, creatinina y PA', 'K+ ≤ 5,0; creatinina estable'],
+  ['sraa', 'aine', 'media', 'IECA/ARA-II + AINE: riesgo de lesión renal aguda y menor efecto antihipertensivo (mayor si hay diurético).', 'Suspender el AINE y preferir acetaminofén.', 'Creatinina y PA', 'Creatinina estable; PA en meta'],
+  ['clopidogrel', 'ibp2c19', 'media', 'Clopidogrel + omeprazol/esomeprazol: menor activación de clopidogrel. Preferir pantoprazol.', 'Cambiar omeprazol/esomeprazol por pantoprazol 40 mg/día.', 'Eventos cardiovasculares', 'Sin eventos trombóticos'],
+  ['opioide', 'benzo', 'alta', 'Opioide + benzodiacepina: sedación profunda y depresión respiratoria.', 'Evitar la combinación: suspender o reducir la benzodiacepina y usar la menor dosis eficaz de opioide.', 'Nivel de sedación, FR y SatO₂', 'Alerta; FR ≥ 12 rpm'],
+  ['tramadol', 'isrs', 'alta', 'Tramadol + ISRS/IRSN: riesgo de síndrome serotoninérgico y convulsiones.', 'Sustituir tramadol por un analgésico sin efecto serotoninérgico.', 'Signos de síndrome serotoninérgico', 'Ausentes'],
+  ['estatina34', 'inh3a4', 'alta', 'Simva/atorva/lovastatina + inhibidor de CYP3A4: riesgo de miopatía/rabdomiólisis.', 'Suspender la estatina mientras dure el inhibidor o cambiar a rosuvastatina/pravastatina.', 'Mialgias y CPK', 'Sin mialgias; CPK normal'],
+  ['digoxina', 'amiodarona', 'alta', 'Digoxina + amiodarona: aumento de digoxinemia. Reducir dosis y monitorizar niveles.', 'Reducir la dosis de digoxina 50 % y medir digoxinemia.', 'Digoxinemia, FC y ECG', '0,5–0,9 ng/mL'],
+  ['litio', 'litioInt', 'alta', 'Litio + IECA/ARA-II/AINE/tiazida: puede elevar la litemia. Monitorizar niveles.', 'Evitar la combinación o reducir la dosis de litio; medir litemia.', 'Litemia y creatinina', '0,6–1,0 mEq/L'],
+  ['levotiroxina', 'quelantes', 'media', 'Levotiroxina + calcio/hierro/antiácidos: menor absorción. Separar al menos 4 horas.', 'Separar la administración al menos 4 h (levotiroxina en ayunas).', 'TSH', 'TSH en rango'],
+  ['levotiroxina', 'ibp', 'baja', 'Levotiroxina + IBP: posible menor absorción. Vigilar TSH.', 'Revisar la necesidad del IBP y controlar TSH.', 'TSH', 'TSH en rango'],
+  ['quinolona', 'quelantes', 'media', 'Quinolona + cationes (Ca, Fe, Mg, Al): menor absorción. Dar la quinolona 2 h antes o 6 h después.', 'Administrar la quinolona 2 h antes o 6 h después del catión.', 'Respuesta clínica a la infección', 'Mejoría clínica'],
+  ['metotrexato', 'aine', 'alta', 'Metotrexato + AINE: aumento de la toxicidad de metotrexato.', 'Evitar el AINE; preferir acetaminofén.', 'Hemograma, creatinina y transaminasas', 'Sin toxicidad'],
+  ['metotrexato', 'tmpsmx', 'alta', 'Metotrexato + TMP-SMX: riesgo de mielotoxicidad.', 'Evitar la combinación y elegir otro antimicrobiano.', 'Hemograma', 'Sin citopenias'],
+  ['asa_diur', 'aminoglucosido', 'media', 'Diurético de asa + aminoglucósido: mayor oto y nefrotoxicidad.', 'Monitorizar niveles del aminoglucósido y la función renal; limitar la duración.', 'Creatinina y niveles del aminoglucósido', 'Creatinina estable; niveles en rango'],
+  ['vancomicina', 'piperacilina', 'media', 'Vancomicina + piperacilina/tazobactam: mayor riesgo de lesión renal aguda. Monitorizar creatinina.', 'Considerar cambiar piperacilina/tazobactam por cefepima o meropenem; creatinina diaria.', 'Creatinina', 'Creatinina estable'],
+  ['qt', 'qt', 'media', 'Dos o más medicamentos que prolongan el QT. Considerar ECG y control de K+/Mg2+.', 'Tomar ECG basal; corregir K+ y Mg2+; evitar la combinación si QTc > 500 ms.', 'QTc, K+ y Mg2+', 'QTc < 500 ms']
 ];
+const plan = (objetivo, intervencion, tipoInt, parametro = '', meta = '', frecuencia = '') => ({ objetivo, intervencion, tipoInt, parametro, meta, frecuencia });
+function tipoDesde(txt) {
+  const t = norm(txt);
+  if (/ suspend| evitar/.test(t)) return 'Suspender medicamento';
+  if (/ sustitu| cambiar| preferir/.test(t)) return 'Sustituir medicamento';
+  if (/ reduc| ajust/.test(t)) return 'Ajustar dosis';
+  if (/ separar/.test(t)) return 'Ajustar frecuencia/horario';
+  return 'Solicitar paraclínicos/monitorización';
+}
+/* Parámetros de monitoreo por tipo de diagnóstico: [regex, parámetro, meta, frecuencia] */
+const DX_MON = [
+  [/neumon|infecc|celulitis|sepsis|pielonef|ivu|absceso|osteomiel/, 'Temperatura, FC, FR, SatO₂, leucocitos y PCR', 'Afebril; SatO₂ ≥ 92 %; leucocitos y PCR en descenso', 'SV c/6 h; paraclínicos c/48–72 h'],
+  [/insuficiencia cardiaca|falla cardiaca|\bic\b/, 'Peso diario, balance hídrico, PA, FC, edema, K+ y creatinina', 'Euvolemia; PA > 90/60; K+ 3,5–5,0 mEq/L', 'Diario'],
+  [/fibrilacion|flutter|arritmia/, 'FC, ritmo; INR si recibe warfarina', 'FC < 110 lpm en reposo; INR 2–3', 'Diario'],
+  [/diabetes|hiperglucemia/, 'Glucometría (y HbA1c ambulatoria)', 'Glucemia 140–180 mg/dL en hospitalización', 'Glucometría preprandial o c/6 h'],
+  [/hipertension/, 'Presión arterial', 'PA < 130/80 mmHg (ambulatorio)', 'c/8 h'],
+  [/renal|lra|erc|nefro/, 'Creatinina, BUN, diuresis y K+', 'Creatinina en descenso; diuresis > 0,5 mL/kg/h', 'Diario'],
+  [/asma|epoc|bronc/, 'FR, SatO₂, disnea y técnica inhalatoria', 'SatO₂ ≥ 92 % (88–92 % en EPOC)', 'c/6 h'],
+  [/dolor|fractura|trauma/, 'Dolor (EVA)', 'EVA ≤ 3/10', 'c/8 h'],
+  [/tromb|tvp|tep|embolia/, 'Signos de sangrado, Hb y plaquetas', 'Sin sangrado; plaquetas estables', 'c/48–72 h'],
+  [/hipotiroid|tiroid/, 'TSH', 'TSH en rango', 'Cada 6–8 semanas'],
+  [/dislipidemia|colesterol/, 'Perfil lipídico; CPK si hay síntomas', 'LDL en meta según riesgo', 'Cada 6–12 semanas'],
+  [/anemia/, 'Hemoglobina y ferritina', 'Hb en aumento', 'Semanal'],
+  [/insomnio|ansiedad|depres|delirium/, 'Sueño, síntomas, sedación diurna y caídas', 'Sueño reparador sin sedación diurna', 'Diario'],
+  [/epilep|convuls/, 'Frecuencia de crisis; niveles si aplica', 'Sin crisis', 'Diario'],
+  [/cirrosis|hepat/, 'Bilirrubina, albúmina, INR, encefalopatía', 'Estabilidad clínica', 'c/48–72 h']
+];
+function dxMon(nombre) {
+  const n = norm(nombre);
+  const hit = DX_MON.find(([re]) => re.test(n));
+  return hit ? hit.slice(1) : [`Signos, síntomas y paraclínicos de ${nombre}`, 'Mejoría clínica', 'Diario'];
+}
 
 /* [grupo o lista, CrCl umbral (mL/min), nivel, mensaje] */
 const RENAL = [
@@ -210,6 +244,7 @@ function emptyCase() {
     },
     sintesis: { agudos: '', cronicos: '', estables: '' },
     dx: [], labs: [], meds: [], cribado: {}, prm: [], paf: [], monitoreo: [], egreso: [],
+    egresoPrevisto: '', analisis: null,
     recomendaciones: { dieta: '', alarma: '', medicamentos: '' },
     soap: { s: '', o: '', a: '', p: '' },
     revision: { estado: 'Pendiente', comentarios: '' }
@@ -219,7 +254,7 @@ const ROW = {
   dx: () => ({ nombre: '', cie: '', curso: '', severidad: '', control: '', estado: 'Activo', hallazgos: '', factores: '', paraclinicos: '' }),
   labs: () => ({ nombre: '', valor: '', unidad: '', min: '', max: '', fecha: '', asociacion: '', interpretacion: '' }),
   meds: () => ({ id: uid(), nombre: '', casa: '', hosp: '', fuente: '', indicacion: '', altoRiesgo: false, decision: '', discrepancia: '', justificacion: '', alta: '' }),
-  prm: () => ({ med: '', categoria: '', tipo: '', causa: '', estado: 'Real', rnm: '', descripcion: '', evidencia: '', severidad: '', prioridad: '', objetivo: '', intervencion: '', tipoInt: '', comunicado: '', aceptada: 'Pendiente', parametro: '', meta: '', frecuencia: '', cumplido: 'Pendiente' }),
+  prm: () => ({ med: '', categoria: '', tipo: '', causa: '', estado: 'Real', rnm: '', descripcion: '', evidencia: '', severidad: '', prioridad: '', objetivo: '', intervencion: '', tipoInt: '', comunicado: '', aceptada: 'Pendiente', parametro: '', meta: '', frecuencia: '', cumplido: 'Pendiente', origen: '', clave: '' }),
   paf: () => ({ dx: '', oft: '', terapia: '', parametro: '', meta: '', frecuencia: '' }),
   monitoreo: () => ({ parametro: '', meta: '', frecuencia: '', r1: '', r2: '', r3: '', r4: '', r5: '', r6: '' }),
   egreso: () => ({ med: '', dosis: '', horario: '', paraQue: '', ram: '', consultar: '' })
@@ -298,22 +333,26 @@ function labFlag(l) {
 
 function computeAlerts() {
   const out = [], seen = new Set();
-  const add = (nivel, tipo, msg, prm) => { const k = tipo + msg; if (seen.has(k)) return; seen.add(k); out.push({ nivel, tipo, msg, prm }); };
+  const add = (nivel, tipo, msg, prm) => { const k = tipo + msg; if (seen.has(k)) return; seen.add(k); if (prm) prm.clave = k; out.push({ nivel, tipo, msg, prm }); };
   const p = S.paciente, c = calc(), act = activeMeds(), edad = num(p.edad);
 
   // Conciliación
   S.meds.forEach(m => {
     if (!m.nombre.trim()) return;
     if (m.casa.trim() && !m.decision) add('media', 'Conciliación', `${m.nombre}: medicamento domiciliario sin decisión de conciliación.`);
-    if (m.casa.trim() && !m.hosp.trim() && !String(m.decision).startsWith('Suspender') && m.decision !== 'Sustituir')
+    const omision = m.casa.trim() && !m.hosp.trim() && !String(m.decision).startsWith('Suspender') && m.decision !== 'Sustituir';
+    if (omision)
       add('alta', 'Conciliación', `${m.nombre}: está en la lista domiciliaria pero no en la prescripción actual (posible omisión).`,
-        { med: m.nombre, categoria: 'Indicación', tipo: 'Requiere terapia farmacológica adicional', causa: 'Afección no tratada', rnm: RNM_OPTS[0], descripcion: `Omisión en conciliación: ${m.nombre} (${m.casa}) no prescrito al ingreso${m.indicacion ? ' para ' + m.indicacion : ''}.` });
-    if (DISC_NO_JUST.includes(m.discrepancia))
+        { med: m.nombre, categoria: 'Indicación', tipo: 'Requiere terapia farmacológica adicional', causa: 'Afección no tratada', rnm: RNM_OPTS[0], descripcion: `Omisión en conciliación: ${m.nombre} (${m.casa}) no prescrito al ingreso${m.indicacion ? ' para ' + m.indicacion : ''}.`,
+          ...plan(`Garantizar la continuidad del tratamiento de ${m.indicacion || 'la condición de base'}.`, `Reiniciar ${m.nombre} ${m.casa} o documentar con el médico tratante la justificación clínica de su suspensión.`, 'Iniciar medicamento', ...(m.indicacion ? dxMon(m.indicacion) : ['Control de la condición de base', 'Condición controlada', 'Diario'])) });
+    if (DISC_NO_JUST.includes(m.discrepancia) && !omision)
       add('alta', 'Conciliación', `${m.nombre}: discrepancia no justificada — ${m.discrepancia}.`,
-        { med: m.nombre, descripcion: `Error de conciliación (${m.discrepancia}) con ${m.nombre}. Domicilio: ${m.casa || '—'}; actual: ${m.hosp || '—'}.` });
+        { med: m.nombre, descripcion: `Error de conciliación (${m.discrepancia}) con ${m.nombre}. Domicilio: ${m.casa || '—'}; actual: ${m.hosp || '—'}.`,
+          ...plan('Resolver la discrepancia de conciliación.', `Aclarar con el prescriptor la discrepancia (${m.discrepancia.toLowerCase()}) de ${m.nombre} y corregir o justificar la prescripción.`, m.discrepancia.startsWith('Diferente') ? 'Ajustar dosis' : 'Otra', 'Prescripción conciliada', 'Discrepancia resuelta y documentada', 'Única, en las primeras 24 h') });
     if (isActive(m) && !m.indicacion.trim())
       add('media', 'Indicación', `${m.nombre}: sin indicación registrada.`,
-        { med: m.nombre, categoria: 'Indicación', tipo: 'Terapia farmacológica innecesaria', causa: 'Sin indicación médica', rnm: RNM_OPTS[1], descripcion: `${m.nombre} sin indicación clínica documentada.` });
+        { med: m.nombre, categoria: 'Indicación', tipo: 'Terapia farmacológica innecesaria', causa: 'Sin indicación médica', rnm: RNM_OPTS[1], descripcion: `${m.nombre} sin indicación clínica documentada.`,
+          ...plan(`Evitar la exposición innecesaria a ${m.nombre}.`, `Verificar la indicación de ${m.nombre}; si no existe, suspender (desprescripción).`, 'Suspender medicamento', 'Indicación documentada', 'Medicamento con indicación o suspendido', 'Única, en 24 h') });
   });
 
   // Diagnósticos sin tratamiento asociado
@@ -321,29 +360,32 @@ function computeAlerts() {
     const nd = norm(d.nombre).trim();
     const tratado = act.some(m => { const ni = norm(m.indicacion).trim(); return ni && (ni.includes(nd) || nd.includes(ni)); });
     if (!tratado) add('baja', 'Indicación', `"${d.nombre}" no tiene medicamento activo asociado. ¿Requiere terapia farmacológica o solo no farmacológica?`,
-      { categoria: 'Indicación', tipo: 'Requiere terapia farmacológica adicional', causa: 'Afección no tratada', rnm: RNM_OPTS[0], descripcion: `${d.nombre} sin tratamiento farmacológico.` });
+      { categoria: 'Indicación', tipo: 'Requiere terapia farmacológica adicional', causa: 'Afección no tratada', rnm: RNM_OPTS[0], descripcion: `${d.nombre} sin tratamiento farmacológico.`,
+        ...plan(`Tratar o controlar ${d.nombre.toLowerCase()}.`, `Evaluar según guía la necesidad de terapia farmacológica para ${d.nombre}; considerar medidas no farmacológicas.`, 'Iniciar medicamento', ...dxMon(d.nombre)) });
   });
 
   // Duplicidades
   const seenName = {};
-  act.forEach(m => { const k = norm(m.nombre).trim().split(' ')[0]; if (!k) return; if (seenName[k]) add('alta', 'Duplicidad', `${m.nombre} aparece más de una vez en la lista activa.`, { med: m.nombre, categoria: 'Indicación', tipo: 'Terapia farmacológica innecesaria', causa: 'Terapia duplicada', descripcion: `Duplicidad: ${m.nombre} registrado dos veces.` }); seenName[k] = 1; });
+  act.forEach(m => { const k = norm(m.nombre).trim().split(' ')[0]; if (!k) return; if (seenName[k]) add('alta', 'Duplicidad', `${m.nombre} aparece más de una vez en la lista activa.`, { med: m.nombre, categoria: 'Indicación', tipo: 'Terapia farmacológica innecesaria', causa: 'Terapia duplicada', descripcion: `Duplicidad: ${m.nombre} registrado dos veces.`, ...plan('Eliminar la duplicidad.', `Dejar una sola prescripción de ${m.nombre}.`, 'Suspender medicamento', 'Lista de medicamentos', 'Sin duplicidades', 'Única, en 24 h') }); seenName[k] = 1; });
   for (const [g, lbl] of Object.entries(DUP_GROUPS)) {
     const ms = act.filter(m => inG(m, g));
     const distintos = [...new Set(ms.map(m => norm(m.nombre).trim().split(' ')[0]))];
     if (distintos.length > 1) {
       const names = ms.map(m => m.nombre).join(' + ');
       add('alta', 'Duplicidad', `Duplicidad terapéutica de ${lbl}: ${names}.${g === 'anticoag' ? ' Verificar si es terapia puente intencional.' : g === 'opioide' ? ' Verificar si es esquema basal + rescate.' : ''}`,
-        { med: names, categoria: 'Indicación', tipo: 'Terapia farmacológica innecesaria', causa: 'Terapia duplicada', rnm: RNM_OPTS[1], descripcion: `Duplicidad terapéutica de ${lbl}: ${names}.` });
+        { med: names, categoria: 'Indicación', tipo: 'Terapia farmacológica innecesaria', causa: 'Terapia duplicada', rnm: RNM_OPTS[1], descripcion: `Duplicidad terapéutica de ${lbl}: ${names}.`,
+          ...plan('Eliminar la duplicidad terapéutica no justificada.', `Suspender uno de los medicamentos (${names}) o documentar que la combinación es intencional${g === 'anticoag' ? ' (p. ej., terapia puente con objetivo de INR definido)' : ''}.`, 'Suspender medicamento', g === 'anticoag' ? 'Signos de sangrado, Hb e INR' : 'Lista de medicamentos', g === 'anticoag' ? 'Sin sangrado; un solo anticoagulante salvo puente' : 'Sin duplicidades', 'Diario') });
     }
   }
 
   // Interacciones
   for (let i = 0; i < act.length; i++) for (let j = i + 1; j < act.length; j++) {
     const a = act[i], b = act[j];
-    for (const [g1, g2, nivel, msg] of INTER) {
+    for (const [g1, g2, nivel, msg, acc, par, meta] of INTER) {
       if ((inG(a, g1) && inG(b, g2)) || (inG(a, g2) && inG(b, g1))) {
         add(nivel, 'Interacción', `${a.nombre} + ${b.nombre}: ${msg}`,
-          { med: `${a.nombre} + ${b.nombre}`, categoria: 'Seguridad', tipo: 'Reacción adversa al medicamento', causa: 'Interacción con medicamentos', estado: 'Potencial', rnm: RNM_OPTS[4], descripcion: `Interacción ${a.nombre} + ${b.nombre}. ${msg}` });
+          { med: `${a.nombre} + ${b.nombre}`, categoria: 'Seguridad', tipo: 'Reacción adversa al medicamento', causa: 'Interacción con medicamentos', estado: 'Potencial', rnm: RNM_OPTS[4], descripcion: `Interacción ${a.nombre} + ${b.nombre}. ${msg}`,
+            ...plan('Prevenir el efecto adverso por la interacción.', acc, tipoDesde(acc), par, meta, 'Diario mientras dure la combinación') });
       }
     }
   }
@@ -352,9 +394,14 @@ function computeAlerts() {
   if (c.crclUso) {
     act.forEach(m => RENAL.forEach(([g, umbral, nivel, msg]) => {
       const hit = Array.isArray(g) ? g.some(k => hasKw(m.nombre, k)) : inG(m, g);
-      if (hit && c.crclUso < umbral)
-        add(nivel, 'Función renal', `${m.nombre} (CrCl ${c.crclUso.toFixed(0)} mL/min): ${msg}`,
-          { med: m.nombre, categoria: 'Seguridad', tipo: 'Dosis demasiado alta', causa: 'Dosis incorrecta', estado: 'Potencial', rnm: RNM_OPTS[5], descripcion: `${m.nombre} requiere ajuste por función renal (CrCl ${c.crclUso.toFixed(0)} mL/min). ${msg}` });
+      if (hit && c.crclUso < umbral) {
+        const cr = c.crclUso.toFixed(0);
+        const suspender = (hasKw(m.nombre, 'metformina') && c.crclUso < 30) || (/contraindicad|evitar/i.test(msg) && !/ajustar|reducir/i.test(msg));
+        const acc = suspender ? `Suspender ${m.nombre} (CrCl ${cr} mL/min) y elegir una alternativa segura para la función renal.` : `Ajustar ${m.nombre} a la función renal (CrCl ${cr} mL/min): ${msg}`;
+        add(nivel, 'Función renal', `${m.nombre} (CrCl ${cr} mL/min): ${msg}`,
+          { med: m.nombre, categoria: 'Seguridad', tipo: suspender ? 'Reacción adversa al medicamento' : 'Dosis demasiado alta', causa: suspender ? 'Contraindicación presente' : 'Dosis incorrecta', estado: 'Potencial', rnm: RNM_OPTS[5], descripcion: `${m.nombre} requiere ${suspender ? 'suspensión' : 'ajuste'} por función renal (CrCl ${cr} mL/min). ${msg}`,
+            ...plan(`Dosificar ${m.nombre} de forma segura según la función renal.`, acc, suspender ? 'Suspender medicamento' : 'Ajustar dosis', 'Creatinina y CrCl', 'Dosis acorde a la CrCl; sin toxicidad', 'Cada 24–48 h') });
+      }
     }));
   }
 
@@ -362,7 +409,8 @@ function computeAlerts() {
   if (edad && edad >= 65) act.forEach(m => BEERS.forEach(([g, msg]) => {
     const hit = Array.isArray(g) ? g.some(k => hasKw(m.nombre, k)) : inG(m, g);
     if (hit) add('media', 'Adulto mayor', `${m.nombre}: ${msg}`,
-      { med: m.nombre, categoria: 'Seguridad', tipo: 'Reacción adversa al medicamento', causa: 'Medicamento inseguro para el paciente', estado: 'Potencial', rnm: RNM_OPTS[4], descripcion: `${m.nombre} potencialmente inapropiado en paciente de ${edad} años. ${msg}` });
+      { med: m.nombre, categoria: 'Seguridad', tipo: 'Reacción adversa al medicamento', causa: 'Medicamento inseguro para el paciente', estado: 'Potencial', rnm: RNM_OPTS[4], descripcion: `${m.nombre} potencialmente inapropiado en paciente de ${edad} años. ${msg}`,
+        ...plan('Reducir el riesgo de eventos adversos en el adulto mayor.', `Considerar desprescribir ${m.nombre} o sustituirlo por una alternativa más segura (retiro gradual si es de uso crónico).`, 'Sustituir medicamento', 'Sedación, caídas y estado cognitivo', 'Sin eventos adversos', 'Diario') });
   }));
 
   // Alergias
@@ -374,9 +422,11 @@ function computeAlerts() {
     const tokens = al.trim().split(' ').filter(w => w.length >= 5 && !stop.includes(w));
     act.forEach(m => {
       const pr = { med: m.nombre, categoria: 'Seguridad', tipo: 'Reacción adversa al medicamento', causa: 'Reacción alérgica', estado: 'Potencial', rnm: RNM_OPTS[4] };
-      if (penAl && inG(m, 'penicilina')) add('alta', 'Alergia', `${m.nombre}: paciente con alergia a penicilinas registrada.`, { ...pr, descripcion: `${m.nombre} prescrito a paciente con alergia a penicilinas.` });
-      else if (penAl && (inG(m, 'cefalo') || inG(m, 'carbapenem'))) add('media', 'Alergia', `${m.nombre}: reactividad cruzada baja con alergia a penicilinas; verificar tipo y gravedad de la reacción previa.`, { ...pr, descripcion: `Posible reactividad cruzada de ${m.nombre} con alergia a penicilinas.` });
-      else if (tokens.some(w => norm(m.nombre).includes(' ' + w))) add('alta', 'Alergia', `${m.nombre}: coincide con una alergia registrada (${p.alergias}).`, { ...pr, descripcion: `${m.nombre} coincide con alergia registrada.` });
+      const sust = plan('Evitar una reacción alérgica.', `Suspender ${m.nombre} y sustituirlo por un medicamento de otro grupo farmacológico.`, 'Sustituir medicamento', 'Signos de hipersensibilidad', 'Sin reacción alérgica', 'Cada turno');
+      if (penAl && inG(m, 'penicilina')) add('alta', 'Alergia', `${m.nombre}: paciente con alergia a penicilinas registrada.`, { ...pr, descripcion: `${m.nombre} prescrito a paciente con alergia a penicilinas.`, ...sust });
+      else if (penAl && (inG(m, 'cefalo') || inG(m, 'carbapenem'))) add('media', 'Alergia', `${m.nombre}: reactividad cruzada baja con alergia a penicilinas; verificar tipo y gravedad de la reacción previa.`,
+        { ...pr, descripcion: `Posible reactividad cruzada de ${m.nombre} con alergia a penicilinas.`, ...plan('Evitar una reacción alérgica.', `Verificar el tipo de reacción previa: si no fue grave (no anafilaxia ni reacción cutánea severa), continuar ${m.nombre} con vigilancia; si fue grave, sustituir.`, 'Solicitar paraclínicos/monitorización', 'Signos de hipersensibilidad', 'Sin reacción alérgica', 'Cada turno las primeras 48 h') });
+      else if (tokens.some(w => norm(m.nombre).includes(' ' + w))) add('alta', 'Alergia', `${m.nombre}: coincide con una alergia registrada (${p.alergias}).`, { ...pr, descripcion: `${m.nombre} coincide con alergia registrada.`, ...sust });
     });
   }
 
@@ -385,7 +435,8 @@ function computeAlerts() {
     if (!isActive(m)) return;
     const r = S.cribado[`${m.id}|${qi}`];
     if (r === malo) add('media', 'Evaluación sistemática', `${m.nombre} — P${qi + 1} ${q} Respuesta: ${r}.`,
-      { med: m.nombre, ...pre, descripcion: `${m.nombre}: ${q} → ${r}. ${S.cribado[m.id + '|c'] || ''}`.trim() });
+      { med: m.nombre, ...pre, descripcion: `${m.nombre}: ${q} → ${r}. ${S.cribado[m.id + '|c'] || ''}`.trim(),
+        ...plan(`Resolver el problema identificado en la pregunta ${qi + 1}.`, `Definir y documentar la intervención para ${m.nombre}: ${q.replace(/[¿?]/g, '')}.`, '') });
   }));
 
   // Paraclínicos y polifarmacia (informativas)
@@ -451,7 +502,7 @@ const EJ = {
   'soap.o': 'PA 118/70 mmHg, FC 84 lpm, T 37,2 °C, SatO₂ 93 %. Cr 1,3 mg/dL, K+ 5,0 mEq/L, INR 2,9. 10 medicamentos activos; alto riesgo: warfarina, enoxaparina.',
   'soap.a': 'NAC en mejoría. Polifarmacia excesiva (10). PRM identificados: 3. PRM-01: INR supraterapéutico por interacción (Seguridad; severidad moderada; prioridad alta)…',
   'soap.p': '1. Ajustar warfarina según INR diario. 2. Suspender metformina (CrCl 26 mL/min). 3. Educar al cuidador sobre horarios. Seguimiento en 24 h.',
-  'revision.estado': 'Requiere ajustes',
+  'revision.estado': 'Requiere ajustes', 'egresoPrevisto': 'Sí',
   'revision.comentarios': 'Buena identificación de interacciones; falta justificar la decisión sobre furosemida y priorizar los PRM.'
 };
 const exKey = path => path.startsWith('cribado.') ? (path.endsWith('|c') ? 'cribado.c' : '') : path.replace(/\.\d+\./, '.*.');
@@ -625,7 +676,7 @@ function prmCard(r, i) {
   const b = `prm.${i}.`, tipos = r.categoria ? Object.keys(PRM_TAX[r.categoria] || {}) : [];
   const causas = r.categoria && r.tipo ? (PRM_TAX[r.categoria]?.[r.tipo] || []) : [];
   return `<section class="card prm-card sev-${esc(r.severidad)}">
-    <div class="card-head"><h4>PRM-${pad2(i + 1)} ${r.categoria ? `<span class="badge blue">${esc(r.categoria)}</span>` : ''} ${r.prioridad ? `<span class="badge ${r.prioridad === 'Alta' ? 'red' : r.prioridad === 'Media' ? 'amber' : 'green'}">Prioridad ${esc(r.prioridad.toLowerCase())}</span>` : ''}</h4>
+    <div class="card-head"><h4>PRM-${pad2(i + 1)} ${r.origen === 'auto' ? '<span class="badge amber" title="Generado por el análisis automático">Automático · verificar</span>' : ''} ${r.categoria ? `<span class="badge blue">${esc(r.categoria)}</span>` : ''} ${r.prioridad ? `<span class="badge ${r.prioridad === 'Alta' ? 'red' : r.prioridad === 'Media' ? 'amber' : 'green'}">Prioridad ${esc(r.prioridad.toLowerCase())}</span>` : ''}</h4>
     <button class="x" data-del="prm.${i}" title="Eliminar PRM" aria-label="Eliminar PRM">×</button></div>
     <div class="subhead">Identificación</div>
     <div class="grid g4">
@@ -684,7 +735,8 @@ function secMonit() {
 function secEgreso() {
   return secHead('Plan de egreso', 'Educación y horario optimizado') +
     hint('<b>Egreso:</b> organice los horarios según los hábitos del paciente y evitando interacciones (p. ej., separar levotiroxina de calcio, hierro e IBP). Use lenguaje sencillo para el paciente o cuidador.') +
-    `<section class="card"><div class="card-head"><h3>Medicamentos al egreso</h3><button class="btn small" data-act="egreso-fill">Precargar medicamentos activos</button></div>
+    `<section class="card"><div class="grid g4">${field('egresoPrevisto', 'Egreso previsto', 'select', { o: ['Sí', 'En evaluación', 'No'] })}<p class="muted span3" style="margin:22px 0 0">Si no lo indica, el análisis automático genera el plan solo cuando no hay problemas agudos en progresión o sin control.</p></div></section>
+    <section class="card"><div class="card-head"><h3>Medicamentos al egreso</h3><button class="btn small" data-act="egreso-fill">Precargar medicamentos activos</button></div>
     ${tableEd('egreso', [
       { k: 'med', l: 'Medicamento', w: '160px' },
       { k: 'dosis', l: 'Dosis', w: '120px' },
@@ -731,9 +783,19 @@ function summaryStats() {
   </div>`;
 }
 
+function analisisCard() {
+  const a = S.analisis;
+  const body = a && a.log ? `<p class="muted" style="margin:0 0 10px">Último análisis: ${new Date(a.fecha).toLocaleString('es-CO')}</p>
+    <div class="alerts">${a.log.map(([t, msg, sec]) => `<div class="alert info"><span class="txt"><span class="tipo">${esc(t)}</span>${esc(msg)}</span>${sec ? `<button class="btn small" data-nav="${sec}">Revisar</button>` : ''}</div>`).join('')}</div>
+    <p class="muted" style="margin:10px 0 0">Todo lo generado es una <b>propuesta</b>: el químico farmacéutico debe verificarla, ajustarla y validarla. Los PRM automáticos aparecen con la etiqueta “Automático · verificar”.</p>`
+    : '<p class="muted" style="margin:0">Con los datos registrados, el análisis concilia, identifica PRM, arma el PAF, el plan de monitoreo, la nota SOAP y el plan de egreso si corresponde.</p>';
+  return `<section class="card"><div class="card-head"><h3>Análisis automático</h3><button class="btn primary" data-act="analyze">⚡ ${a ? 'Volver a analizar' : 'Analizar caso'}</button></div>${body}</section>`;
+}
+
 function secInforme() {
   return secHead('Informe y exportación', 'Resumen del análisis farmacoterapéutico') +
     hint('<b>Cierre:</b> revise el resumen y la vista previa. En modo “En formación”, el tutor registra aquí su revisión. Exporte a Word para editar, a PDF para archivar o a JSON para guardar el caso y retomarlo después.') +
+    analisisCard() +
     `<section class="card"><h3>Resumen</h3>${summaryStats()}</section>
     <section class="card only-formacion"><h3>Revisión del tutor</h3><div class="grid g4">
       ${field('revision.estado', 'Estado', 'select', { o: OPT.revision })}
@@ -825,22 +887,239 @@ function genSoap() {
     S.sintesis.cronicos && `Problemas crónicos clave: ${S.sintesis.cronicos}`,
     dxTxt && `Diagnósticos: ${dxTxt}.`,
     `Polifarmacia: ${act.length} medicamentos — ${polyCat(act.length)}.`,
+    (() => { const nj = S.meds.filter(m => DISC_NO_JUST.includes(m.discrepancia)); const pd = S.meds.filter(m => m.nombre.trim() && m.casa.trim() && !m.decision); return `Conciliación: ${nj.length} discrepancia(s) no justificada(s)${nj.length ? ' (' + nj.map(m => `${m.nombre}: ${m.discrepancia.toLowerCase()}`).join('; ') + ')' : ''}${pd.length ? `; pendiente decisión sobre ${pd.map(m => m.nombre).join(', ')}` : ''}.`; })(),
     `Número de PRM identificados: ${S.prm.length}.`,
     ...S.prm.map((r, i) => `PRM-${pad2(i + 1)}: ${r.descripcion || '—'} Categoría: ${r.categoria || '—'}${r.tipo ? ' / ' + r.tipo : ''}. Causa: ${r.causa || '—'}. Severidad: ${r.severidad || '—'}. Prioridad: ${r.prioridad || '—'}.`)
   ].filter(Boolean).join('\n');
   let n = 0;
+  const fin = s => /[.)]$/.test(s.trim()) ? s.trim() : s.trim() + '.';
+  const mon = S.monitoreo.filter(x => x.parametro);
+  const pafObj = S.paf.filter(x => x.oft);
   const pl = [
-    ...S.prm.filter(r => r.intervencion).map(r => `${++n}. ${r.intervencion}${r.parametro ? ` Monitorizar: ${r.parametro}${r.meta ? ` (meta: ${r.meta})` : ''}${r.frecuencia ? `, ${r.frecuencia}` : ''}.` : ''}`),
-    ...S.paf.filter(x => x.terapia).map(x => `${++n}. ${x.dx ? x.dx + ': ' : ''}${x.terapia}${x.oft ? ` Objetivo: ${x.oft}.` : ''}`),
-    S.egreso.filter(e => e.med).length && `${++n}. Educación al paciente/cuidador sobre: ${S.egreso.map(e => e.med).filter(Boolean).join(', ')}.`
+    ...S.prm.map((r, i) => [r, i]).filter(([r]) => r.intervencion).map(([r, i]) => `${++n}. PRM-${pad2(i + 1)}: ${fin(r.intervencion)}${r.parametro ? ` Monitorizar ${/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]/.test(r.parametro) ? r.parametro.charAt(0).toLowerCase() + r.parametro.slice(1) : r.parametro}${r.meta ? ` (meta: ${r.meta})` : ''}.` : ''}`),
+    ...S.paf.filter(x => !x.auto && x.terapia).map(x => `${++n}. ${x.dx ? x.dx + ': ' : ''}${fin(x.terapia)}`),
+    pafObj.length && `${++n}. Objetivos por problema de salud: ${pafObj.map(x => `${x.dx}: ${x.oft.replace(/\.$/, '')}`).join('; ')}.`,
+    mon.length && `${++n}. Monitoreo prioritario: ${mon.slice(0, 8).map(x => x.parametro).join('; ')}${mon.length > 8 ? ' (ver plan de monitoreo completo)' : ''}.`,
+    S.egreso.filter(e => e.med).length && `${++n}. Educación al paciente/cuidador sobre: ${S.egreso.map(e => e.med).filter(Boolean).join(', ')}.`,
+    `${++n}. Comunicar las intervenciones al médico tratante y reevaluar en 24 h.`
   ].filter(Boolean).join('\n');
   return { s, o, a, p: pl };
 }
 
 function addRow(key, data) { S[key].push({ ...ROW[key](), ...(data || {}) }); touch(); }
 
+/* ───────────────────────── Análisis automático (6 pasos) ─────────────────────────
+   Nunca borra lo que escribió el usuario: completa campos vacíos, agrega PRM nuevos y
+   regenera solo las filas marcadas como automáticas. */
+
+// 1. Conciliación
+function autoConcil() {
+  let filled = 0, disc = 0, pend = 0;
+  S.meds.forEach(m => {
+    if (!m.nombre.trim()) return;
+    const casa = m.casa.trim(), hosp = m.hosp.trim();
+    const set = (k, v) => { if (!String(m[k] || '').trim()) { m[k] = v; filled++; } };
+    if (casa && hosp) {
+      if (norm(casa) === norm(hosp)) { set('decision', 'Continuar'); set('discrepancia', 'Sin discrepancia'); }
+      else { set('decision', 'Ajustar dosis'); set('discrepancia', 'Diferente dosis, vía o frecuencia'); set('justificacion', '[Auto] La dosis, vía o frecuencia actual difiere de la domiciliaria: confirme si el cambio es intencional y documente el motivo.'); }
+    } else if (casa && !hosp) {
+      if (!String(m.decision).startsWith('Suspender') && m.decision !== 'Sustituir') { set('discrepancia', 'Omisión'); set('justificacion', '[Auto] Medicamento domiciliario no prescrito: defina con el médico si se reinicia o documente por qué se suspende.'); }
+    } else if (!casa && hosp) { set('decision', 'Iniciar (nuevo)'); set('discrepancia', 'Sin discrepancia'); }
+    if (!m.altoRiesgo && isHighRisk(m)) { m.altoRiesgo = true; filled++; }
+    if (casa && !m.decision) pend++;
+    if (DISC_NO_JUST.includes(m.discrepancia)) disc++;
+  });
+  return { filled, disc, pend };
+}
+
+// 2. PRM a partir de las alertas de nivel alto y medio
+function autoPrm() {
+  const al = computeAlerts().filter(a => a.prm && (a.nivel === 'alta' || a.nivel === 'media'));
+  const claves = new Set(S.prm.map(p => p.clave).filter(Boolean));
+  const manual = S.prm.filter(p => p.origen !== 'auto');
+  const sev = { alta: 'Grave', media: 'Moderada' }, pri = { alta: 'Alta', media: 'Media' };
+  let added = 0;
+  al.forEach(a => {
+    if (claves.has(a.prm.clave)) return;
+    const toks = String(a.prm.med || '').split('+').map(s => norm(s).trim()).filter(Boolean);
+    const cubierto = list => list.some(p => toks.length && toks.every(t => norm(p.med).includes(' ' + t + ' ')) && (!a.prm.categoria || !p.categoria || p.categoria === a.prm.categoria));
+    if (cubierto(manual)) return;               // ya lo registró el estudiante
+    if (!a.prm.categoria && cubierto(S.prm)) return; // pregunta del cribado ya cubierta por otro PRM
+    S.prm.push({ ...ROW.prm(), severidad: sev[a.nivel], prioridad: pri[a.nivel], comunicado: 'Médico tratante', ...a.prm, origen: 'auto' });
+    claves.add(a.prm.clave); added++;
+  });
+  const vivas = new Set(computeAlerts().map(a => a.prm && a.prm.clave).filter(Boolean));
+  const stale = S.prm.filter(p => p.origen === 'auto' && p.clave && !vivas.has(p.clave)).length;
+  return { added, stale };
+}
+
+// 3. PAF por diagnóstico, construido con los medicamentos y los PRM relacionados
+function prmsDeMeds(meds, dxNombre) {
+  const nd = norm(dxNombre).trim();
+  return S.prm.map((p, i) => [p, i]).filter(([p]) => meds.some(m => norm(p.med).includes(norm(m.nombre))) || (nd && norm(p.descripcion).includes(' ' + nd + ' ')));
+}
+function autoPaf() {
+  S.paf = S.paf.filter(r => !r.auto);
+  const manual = new Set(S.paf.map(r => norm(r.dx)));
+  const act = activeMeds();
+  let n = 0;
+  S.dx.filter(d => d.nombre.trim() && d.estado !== 'Resuelto').forEach(d => {
+    if (manual.has(norm(d.nombre))) return;
+    const nd = norm(d.nombre).trim();
+    const meds = act.filter(m => { const ni = norm(m.indicacion).trim(); return ni && (ni.includes(nd) || nd.includes(ni)); });
+    const prms = prmsDeMeds(meds, d.nombre);
+    const [par, meta, frec] = dxMon(d.nombre);
+    const dn = d.nombre.toLowerCase();
+    const oft = d.curso === 'Agudo' ? `Resolver o estabilizar ${dn} durante la hospitalización (${meta}).`
+      : d.estado === 'Estable' ? `Mantener ${dn} estable, sin descompensación (${meta}).`
+        : `Lograr el control de ${dn} y prevenir su progresión (${meta}).`;
+    const terapia = [
+      meds.length ? `Tratamiento actual: ${meds.map(m => `${m.nombre} ${m.hosp || m.casa}`.trim()).join('; ')}.` : 'Sin tratamiento farmacológico activo: evaluar la necesidad según guía y reforzar medidas no farmacológicas.',
+      ...prms.map(([p, i]) => `PRM-${pad2(i + 1)}: ${p.intervencion || p.descripcion}`)
+    ].join('\n');
+    S.paf.push({ ...ROW.paf(), dx: d.nombre, oft, terapia, parametro: par, meta, frecuencia: frec, auto: true }); n++;
+  });
+  return n;
+}
+
+// 4. Plan de monitoreo: paraclínicos alterados + parámetros de PRM y PAF
+function autoMonit() {
+  S.monitoreo = S.monitoreo.filter(r => !r.auto);
+  // se evita repetir un parámetro cuya palabra principal ya está en el plan (p. ej., "Creatinina y CrCl" si ya está "Creatinina")
+  const admin = /indicacion documentada|lista de medicamentos|prescripcion conciliada/;
+  const clave = p => norm(p).trim().split(' ')[0];
+  const ya = new Set(S.monitoreo.map(r => clave(r.parametro)));
+  const add = (par, meta, frec, r1 = '') => {
+    if (!par || !par.trim() || admin.test(norm(par))) return;
+    const k = clave(par); if (ya.has(k)) return; ya.add(k);
+    S.monitoreo.push({ ...ROW.monitoreo(), parametro: par, meta: meta || '', frecuencia: frec || '', r1, auto: true });
+  };
+  S.labs.filter(l => ['Alto', 'Bajo'].includes(labFlag(l))).forEach(l => add(l.nombre, [l.min, l.max].filter(x => x !== '').join('–') + (l.unidad ? ' ' + l.unidad : ''), 'Diario hasta normalizar', `${l.fecha || ''} – ${l.valor}`.replace(/^ – /, '')));
+  S.paf.forEach(p => add(p.parametro, p.meta, p.frecuencia));
+  S.prm.forEach(p => add(p.parametro, p.meta, p.frecuencia));
+  return S.monitoreo.filter(r => r.auto).length;
+}
+
+// 6. Plan de egreso (si corresponde)
+G.antibiotico = [...G.penicilina, ...G.cefalo, ...G.carbapenem, ...G.quinolona, ...G.aminoglucosido, 'azitromicina', 'claritromicina', 'eritromicina', 'doxiciclina', 'vancomicina', 'metronidazol', 'clindamicina', 'trimetoprim', 'sulfametoxazol', 'nitrofurantoina', 'linezolid', 'fosfomicina'];
+G.antidiab = [...G.sulfonilurea, 'metformina', 'sitagliptina', 'linagliptina', 'empagliflozina', 'dapagliflozina'];
+const EDU = [ // [grupo, para qué sirve, efectos adversos, cuándo consultar]
+  ['anticoag', 'Evitar que se formen coágulos en la sangre.', 'Sangrado de encías o nariz, orina rojiza, heces negras, morados.', 'Si sangra, si se cae y se golpea la cabeza, o antes de tomar cualquier medicamento nuevo.'],
+  ['antiagreg', 'Evitar infartos y trombosis.', 'Sangrado, morados, dolor de estómago.', 'Si sangra o tiene heces negras.'],
+  ['ieca', 'Controlar la presión y proteger el corazón y los riñones.', 'Tos seca, mareo al levantarse.', 'Si se hinchan los labios, la lengua o la cara: vaya a urgencias.'],
+  ['ara2', 'Controlar la presión y proteger el corazón y los riñones.', 'Mareo al levantarse.', 'Si se marea mucho o se desmaya.'],
+  ['asa_diur', 'Eliminar el exceso de líquido del cuerpo (hace orinar más).', 'Mareo, calambres, sed.', 'Si orina muy poco, se marea al pararse o tiene calambres fuertes.'],
+  ['tiazida', 'Controlar la presión y eliminar líquido.', 'Mareo, calambres.', 'Si se marea al pararse o tiene calambres fuertes.'],
+  ['ahk', 'Proteger el corazón y eliminar líquido.', 'Debilidad muscular o palpitaciones (potasio alto).', 'Si siente debilidad, palpitaciones u hormigueo.'],
+  ['insulina', 'Controlar el azúcar en la sangre.', 'Azúcar baja: sudor frío, temblor, confusión.', 'Si tiene azúcar baja repetida o valores mayores de 300 mg/dL.'],
+  ['antidiab', 'Controlar el azúcar en la sangre.', 'Malestar de estómago o diarrea; con algunos, azúcar baja.', 'Si tiene vómito, no puede comer o tiene azúcar baja.'],
+  ['estatina', 'Bajar el colesterol y proteger el corazón.', 'Dolor o debilidad muscular.', 'Si tiene dolor muscular intenso u orina oscura.'],
+  ['ibp', 'Proteger el estómago.', 'Dolor de cabeza, diarrea.', 'Si tiene diarrea persistente.'],
+  ['benzo', 'Ayudar a dormir o calmar la ansiedad.', 'Somnolencia, mareo, riesgo de caídas.', 'Si tiene mucha somnolencia, confusión o se cae.'],
+  ['opioide', 'Calmar el dolor.', 'Estreñimiento, somnolencia, náuseas.', 'Si tiene mucha somnolencia o le cuesta respirar.'],
+  ['aine', 'Calmar el dolor o la inflamación.', 'Dolor de estómago, sangrado digestivo.', 'Si tiene heces negras o dolor de estómago fuerte.'],
+  ['antibiotico', 'Tratar la infección.', 'Diarrea, náuseas, ronchas en la piel.', 'Si aparecen ronchas, dificultad para respirar o diarrea intensa. Complete todo el tratamiento.'],
+  ['levotiroxina', 'Reemplazar la hormona de la tiroides.', 'Palpitaciones o nerviosismo si la dosis es alta.', 'Si tiene palpitaciones o pierde peso sin explicación.'],
+  ['isrs', 'Mejorar el ánimo o la ansiedad.', 'Náuseas, insomnio o somnolencia al inicio.', 'Si tiene pensamientos de hacerse daño: vaya a urgencias.'],
+  ['digoxina', 'Controlar el ritmo y la fuerza del corazón.', 'Náuseas, visión amarilla, pulso lento.', 'Si tiene náuseas, vómito o pulso menor de 50.']
+];
+const HORA = [ // [grupo, texto, combinar con la frecuencia]
+  ['levotiroxina', '6:00 a. m. en ayunas, 30–60 min antes del desayuno', false],
+  ['warfarina', '6:00 p. m., siempre a la misma hora', false],
+  ['asa_diur', 'En la mañana, para no levantarse a orinar en la noche', false],
+  ['benzo', 'Al acostarse', false],
+  ['ibp', '30 minutos antes del desayuno', true],
+  ['metformina', 'con las comidas', true],
+  ['simvastatina', 'En la noche', false],
+  ['lovastatina', 'En la noche', false],
+  ['quelantes', 'separado al menos 4 h de los demás medicamentos', true]
+];
+function horaFrecuencia(txt) {
+  const t = norm(txt);
+  if (/ c ?6 | cada 6 /.test(t)) return '6:00 a. m., 12:00 m., 6:00 p. m. y 12:00 a. m.';
+  if (/ c ?8 | cada 8 /.test(t)) return '6:00 a. m., 2:00 p. m. y 10:00 p. m.';
+  if (/ c ?12 | cada 12 | bid /.test(t)) return '8:00 a. m. y 8:00 p. m.';
+  if (/ noche | hs /.test(t)) return '9:00 p. m.';
+  if (/ c ?24 | cada 24 | dia | diario | una vez | qd /.test(t)) return '8:00 a. m.';
+  return 'Según indicación médica';
+}
+function horarioEgreso(m, dosis) {
+  const h = HORA.find(([g]) => inG(m, g)), f = horaFrecuencia(dosis);
+  if (!h) return f;
+  return h[2] ? `${f}, ${h[1]}` : h[1];
+}
+function egresoCorresponde() {
+  const v = S.egresoPrevisto;
+  if (v === 'Sí') return [true, 'egreso previsto'];
+  if (v === 'En evaluación') return [true, 'borrador: egreso en evaluación'];
+  if (v === 'No') return [false, 'está marcado “Egreso previsto: No”.'];
+  const inestables = S.dx.filter(d => d.nombre.trim() && d.estado === 'Activo' && d.curso !== 'Crónico' && ['En progresión', 'No controlada'].includes(d.control));
+  if (inestables.length) return [false, `aún hay problemas agudos sin control (${inestables.map(d => d.nombre).join(', ')}).`];
+  return [true, 'no hay problemas agudos descontrolados'];
+}
+const dxHas = re => S.dx.some(d => d.nombre.trim() && d.estado !== 'Resuelto' && re.test(norm(d.nombre)));
+function autoEgreso() {
+  S.egreso = S.egreso.filter(r => !r.auto);
+  const ya = new Set(S.egreso.map(e => norm(e.med)));
+  const hospitalario = /\b(iv|sc|im|intravenos\w*|subcut\w*|infusion)\b/i;
+  const meds = activeMeds().filter(m => !ya.has(norm(m.nombre)) && (m.casa.trim() || !hospitalario.test(m.hosp)));
+  meds.forEach(m => {
+    const dosis = m.hosp || m.casa;
+    const edu = EDU.find(([g]) => inG(m, g));
+    const pend = S.prm.map((p, i) => [p, i]).filter(([p]) => norm(p.med).includes(norm(m.nombre)) && p.cumplido !== 'Sí' && /Suspender|Ajustar|Sustituir/.test(p.tipoInt || ''));
+    const aviso = pend.length ? `Pendiente de ${pend.map(([p, i]) => `PRM-${pad2(i + 1)}`).join(', ')}: confirmar dosis antes del egreso. ` : '';
+    S.egreso.push({ ...ROW.egreso(), med: m.nombre, dosis, horario: horarioEgreso(m, dosis),
+      paraQue: edu ? edu[1] : (m.indicacion ? `Tratamiento de ${m.indicacion.toLowerCase()}.` : 'Según indicación médica.'),
+      ram: edu ? edu[2] : 'Informe cualquier síntoma nuevo después de empezar el medicamento.',
+      consultar: aviso + (edu ? edu[3] : 'Si aparece un síntoma nuevo o empeora.'), auto: true });
+  });
+  const R = S.recomendaciones, act = activeMeds();
+  if (!R.dieta.trim()) R.dieta = [
+    dxHas(/insuficiencia cardiaca|falla cardiaca/) && 'Limite la sal (menos de 2 g de sodio al día) y los líquidos según le indicaron; pésese cada mañana.',
+    dxHas(/diabetes/) && 'Evite azúcares y harinas refinadas; coma a horas regulares.',
+    dxHas(/hipertension/) && 'Reduzca la sal, los embutidos y los enlatados.',
+    act.some(m => hasKw(m.nombre, 'warfarina')) && 'Mantenga estable el consumo de verduras de hoja verde (vitamina K) y evite el alcohol.',
+    dxHas(/renal|erc|lra/) && 'Evite el exceso de sal y de alimentos ricos en potasio si se lo indicaron.'
+  ].filter(Boolean).join(' ') || 'Alimentación balanceada en porciones pequeñas y buena hidratación, salvo restricción médica.';
+  if (!R.alarma.trim()) R.alarma = ['Vaya a urgencias si presenta:',
+    dxHas(/neumon|infecc|celulitis|sepsis|pielonef|ivu/) && 'fiebre que no cede, dificultad para respirar o confusión;',
+    dxHas(/insuficiencia cardiaca|falla cardiaca/) && 'aumento de peso de más de 2 kg en 3 días, hinchazón de piernas o falta de aire al acostarse;',
+    act.some(m => inG(m, 'anticoag')) && 'sangrado que no para, heces negras o vómito con sangre;',
+    act.some(m => inG(m, 'insulina') || inG(m, 'sulfonilurea')) && 'azúcar baja (sudor, temblor, confusión) que no mejora al comer azúcar;',
+    'dolor en el pecho, desmayo o cualquier síntoma que empeore.'].filter(Boolean).join(' ');
+  if (!R.medicamentos.trim()) R.medicamentos = ['Tome sus medicamentos a la misma hora todos los días. No cambie ni suspenda dosis por su cuenta. Lleve esta lista a todas sus consultas.',
+    (S.meds.some(m => inG(m, 'aine')) || act.some(m => inG(m, 'anticoag'))) && 'No tome ibuprofeno, naproxeno ni otros antiinflamatorios sin consultar.',
+    /olvid/i.test(S.paciente.social + ' ' + S.paciente.habitos) && 'Use pastillero y alarmas en el celular para no olvidar dosis.'].filter(Boolean).join(' ');
+  return S.egreso.filter(r => r.auto).length;
+}
+
+function runAnalysis() {
+  if (!S.meds.some(m => m.nombre.trim())) { toast('Registre al menos los medicamentos en Conciliación'); go('concil'); return; }
+  if (!confirm('Análisis automático:\n1. Completa la conciliación (solo campos vacíos)\n2. Agrega los PRM detectados\n3. Genera el PAF\n4. Genera el plan de monitoreo\n5. Regenera la nota SOAP\n6. Genera el plan de egreso si corresponde\n\nLo que usted escribió no se borra, salvo la nota SOAP. ¿Continuar?')) return;
+  const log = [];
+  const c1 = autoConcil();
+  log.push(['1. Conciliación', `${c1.filled} campos completados; ${c1.disc} discrepancias no justificadas${c1.pend ? `; ${c1.pend} medicamento(s) domiciliario(s) esperan su decisión` : ''}.`, 'concil']);
+  const c2 = autoPrm();
+  log.push(['2. PRM', `${c2.added} PRM nuevos (total ${S.prm.length}), con clasificación, severidad, prioridad e intervención sugerida${c2.stale ? `. ${c2.stale} PRM automático(s) ya no se detectan: revise si se resolvieron` : ''}.`, 'prm']);
+  const c3 = autoPaf();
+  log.push(['3. PAF', `${c3} plan(es) por diagnóstico, con el tratamiento actual y las intervenciones de los PRM relacionados.`, 'paf']);
+  const c4 = autoMonit();
+  log.push(['4. Monitoreo', `${c4} parámetro(s) generados a partir de paraclínicos alterados, PRM y PAF.`, 'monit']);
+  const [corresponde, motivo] = egresoCorresponde();
+  let egresoMsg;
+  if (corresponde) { const n = autoEgreso(); egresoMsg = [`6. Plan de egreso`, `${n} medicamento(s) con horario, para qué sirve, efectos adversos y cuándo consultar (${motivo}).`, 'egreso']; }
+  else egresoMsg = ['6. Plan de egreso', `No se generó: ${motivo} Para generarlo, marque “Egreso previsto: Sí” en Plan de egreso y vuelva a analizar.`, 'egreso'];
+  S.soap = genSoap();
+  log.push(['5. Nota SOAP', 'Nota de evolución regenerada con la conciliación, los PRM, el plan y el monitoreo.', 'soap']);
+  log.push(egresoMsg);
+  S.analisis = { fecha: new Date().toISOString(), log };
+  touch(); go('informe');
+  toast('Análisis completado: revise y valide cada sección');
+}
+
 const ACTIONS = {
   mode(btn) { UI.modo = btn.dataset.mode; store(UI_KEY, UI); render(); toast(UI.modo === 'experto' ? 'Modo formado: se ocultan guías y ejemplos' : 'Modo en formación: guías, ejemplos y revisión del tutor visibles'); },
+  analyze() { $('details.menu')?.removeAttribute('open'); runAnalysis(); },
   new() { if (!confirm('¿Iniciar un caso nuevo? Se borrará el caso actual de este navegador (exporte un respaldo .json si lo necesita).')) return; S = hydrate(null); store(STORE_KEY, S); go('paciente'); toast('Caso nuevo'); },
   example() { if (!confirm('¿Cargar el caso de ejemplo? Reemplaza el caso actual.')) return; S = hydrate(exampleCase()); store(STORE_KEY, S); go('concil'); toast('Caso de ejemplo cargado (ficticio)'); },
   import() { $('#fileIn').click(); },
@@ -925,7 +1204,7 @@ function buildReport() {
   ${crib.length ? H('Evaluación sistemática por medicamento') + `<table><thead><tr><th>Pregunta</th>${crib.map(m => `<th>${esc(m.nombre)}</th>`).join('')}</tr></thead><tbody>${PREGUNTAS.map(([q], qi) => `<tr><td>${qi + 1}. ${esc(q)}</td>${crib.map(m => `<td>${esc(S.cribado[`${m.id}|${qi}`] || '')}</td>`).join('')}</tr>`).join('')}<tr><td><b>Comentario</b></td>${crib.map(m => `<td>${nl(S.cribado[m.id + '|c'] || '')}</td>`).join('')}</tr></tbody></table>` : ''}
   ${H('Problemas relacionados con medicamentos (PRM)')}
   <p>Total de PRM: <b>${S.prm.length}</b>${S.prm.length ? ' — ' + Object.keys(PRM_TAX).map(k => `${k}: ${S.prm.filter(x => x.categoria === k).length}`).join(' · ') : ''}.</p>
-  ${T(['N.º', 'Medicamento', 'Clasificación', 'Descripción y evidencia', 'Severidad / prioridad', 'RNM'], S.prm.map((r, i) => [`PRM-${pad2(i + 1)}`, r.med, [r.categoria, r.tipo, r.causa].filter(Boolean).join(' › ') + (r.estado ? ` (${r.estado.toLowerCase()})` : ''), [r.descripcion, r.evidencia && 'Evidencia: ' + r.evidencia].filter(Boolean).join('\n'), [r.severidad, r.prioridad && 'Prioridad ' + r.prioridad.toLowerCase()].filter(Boolean).join(' · '), r.rnm]))}
+  ${T(['N.º', 'Medicamento', 'Clasificación', 'Descripción y evidencia', 'Severidad / prioridad', 'RNM'], S.prm.map((r, i) => [`PRM-${pad2(i + 1)}${r.origen === 'auto' ? ' (automático)' : ''}`, r.med, [r.categoria, r.tipo, r.causa].filter(Boolean).join(' › ') + (r.estado ? ` (${r.estado.toLowerCase()})` : ''), [r.descripcion, r.evidencia && 'Evidencia: ' + r.evidencia].filter(Boolean).join('\n'), [r.severidad, r.prioridad && 'Prioridad ' + r.prioridad.toLowerCase()].filter(Boolean).join(' · '), r.rnm]))}
   ${H('Plan de atención para PRM')}
   ${T(['N.º', 'Objetivo', 'Intervención', 'Tipo / comunicada a', 'Monitoreo (parámetro, meta, frecuencia)', 'Aceptación', '¿Se cumplió?'], S.prm.map((r, i) => [`PRM-${pad2(i + 1)}`, r.objetivo, r.intervencion, [r.tipoInt, r.comunicado].filter(Boolean).join(' · '), [r.parametro, r.meta && 'Meta: ' + r.meta, r.frecuencia].filter(Boolean).join('\n'), r.aceptada, r.cumplido]))}
   ${H('Plan de atención por problema de salud (PAF)')}
