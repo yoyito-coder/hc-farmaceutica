@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Historia Clínica Farmacéutica</title>
+<meta name="description" content="Formato interactivo de historia clínica farmacéutica: conciliación de medicamentos, identificación de PRM, plan de atención, monitoreo, egreso y nota SOAP con exportación del análisis.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230f766e'/><path d='M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z' fill='white'/></svg>">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">+</span>
+    <div>
+      <strong>HC Farmacéutica</strong>
+      <small id="patientChip">Sin paciente</small>
+    </div>
+  </div>
+  <div class="top-actions">
+    <div class="seg" role="group" aria-label="Modo de uso">
+      <button data-act="mode" data-mode="formacion" id="mFormacion">En formación</button>
+      <button data-act="mode" data-mode="experto" id="mExperto">Formado</button>
+    </div>
+    <span id="saveState" class="save-state">Guardado</span>
+    <button class="btn ghost" data-act="new">Nuevo</button>
+    <button class="btn ghost" data-act="import">Abrir</button>
+    <button class="btn ghost" data-act="example">Ejemplo</button>
+    <details class="menu">
+      <summary class="btn primary">Exportar análisis</summary>
+      <div class="menu-pop">
+        <button data-act="export-word">Word (.doc)</button>
+        <button data-act="export-pdf">PDF / Imprimir</button>
+        <button data-act="export-csv">PRM en Excel (.csv)</button>
+        <button data-act="export-json">Respaldo del caso (.json)</button>
+      </div>
+    </details>
+  </div>
+</header>
+
+<div class="layout">
+  <nav id="nav" class="nav" aria-label="Secciones"></nav>
+  <main id="main" class="main"></main>
+</div>
+
+<footer class="foot">
+  Herramienta de apoyo académico y asistencial. Las alertas automáticas son orientativas y no reemplazan el juicio clínico ni la consulta de fuentes (Micromedex, Lexicomp, UpToDate, guías).
+  Los datos se guardan solo en este navegador; en equipos compartidos use iniciales en lugar de nombres (Ley 1581 de 2012).
+</footer>
+
+<div id="print-area" aria-hidden="true"></div>
+<input type="file" id="fileIn" accept=".json,application/json" hidden>
+<div id="toast" class="toast" role="status"></div>
+<script src="app.js"></script>
+</body>
+</html>
