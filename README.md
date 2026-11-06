@@ -2,7 +2,7 @@
 
 Formato interactivo de **historia clínica farmacéutica** para químicos farmacéuticos en formación y formados. Sigue el Proceso de Atención al Paciente (Recolectar → Evaluar → Planificar → Implementar → Seguir) y la estructura del taller de inducción a la rotación clínica.
 
-**Usar en línea:** https://jadiazr09.github.io/hc-farmaceutica/ (GitHub Pages)
+**Usar en línea:** https://yoyito-coder.github.io/hc-farmaceutica/ (GitHub Pages)
 
 ## Qué incluye
 
