@@ -399,15 +399,74 @@ function computeAlerts() {
   return out.sort((a, b) => ord[a.nivel] - ord[b.nivel]);
 }
 
+/* ───────────────────────── Ejemplos de diligenciamiento ─────────────────────────
+   Texto gris dentro de cada campo (modo “En formación”). Clave: ruta con * en lugar del índice de fila. */
+
+const EJ = {
+  'paciente.nombre': 'M. G. R. (use iniciales)', 'paciente.documento': 'HC-123456', 'paciente.aseguradora': 'Nueva EPS',
+  'paciente.edad': '72', 'paciente.sexo': 'Femenino', 'paciente.peso': '58', 'paciente.talla': '155',
+  'paciente.servicio': 'Medicina interna', 'paciente.cama': '304B', 'paciente.gestacion': 'No aplica',
+  'paciente.motivo': 'Fiebre, tos productiva y disnea de 3 días de evolución.',
+  'paciente.enfermedadActual': 'Cuadro de 3 días de fiebre no cuantificada, tos con expectoración amarilla y disnea de pequeños esfuerzos. Se automedicó con ibuprofeno 400 mg c/8 h.',
+  'paciente.antecedentes': 'Patológicos: HTA, DM2, IC con FEVI 35 %, FA. Quirúrgicos: colecistectomía (2010). Familiares: madre con DM2.',
+  'paciente.alergias': 'Penicilina — exantema en la infancia. Escriba "niega" si no tiene.',
+  'paciente.habitos': 'No fuma. Alcohol ocasional. Dieta alta en sal. Sedentaria.',
+  'paciente.social': 'Vive con su hija (cuidadora). Primaria incompleta. Usa pastillero; olvida la dosis de la noche.',
+  'paciente.pas': '120', 'paciente.pad': '80', 'paciente.fc': '78', 'paciente.fr': '18', 'paciente.temp': '36.8', 'paciente.sat': '94',
+  'paciente.dolor': '3', 'paciente.scr': '1.1', 'paciente.hepatica': 'Normal',
+  'paciente.farmaceutico': 'Ana Pérez', 'paciente.rol': 'En formación', 'paciente.tutor': 'QF Juan Díaz', 'paciente.institucion': 'Hospital Universitario',
+  'sintesis.agudos': 'Neumonía adquirida en la comunidad con hipoxemia; lesión renal aguda; INR supraterapéutico.',
+  'sintesis.cronicos': 'IC con FEVI reducida; FA anticoagulada con warfarina; DM2 con metformina.',
+  'sintesis.estables': 'HTA controlada; insomnio crónico. Se manejan con conciliación y vigilancia.',
+  'dx.*.nombre': 'Neumonía adquirida en la comunidad', 'dx.*.cie': 'J18.9', 'dx.*.curso': 'Agudo', 'dx.*.severidad': 'Moderada',
+  'dx.*.control': 'En progresión', 'dx.*.estado': 'Activo',
+  'dx.*.hallazgos': 'T 38,4 °C, SatO₂ 89 %, FR 24, leucocitos 15.200, PCR 12 mg/dL', 'dx.*.factores': 'Edad > 65 años, IC, DM2',
+  'labs.*.nombre': 'Potasio', 'labs.*.valor': '5.6', 'labs.*.unidad': 'mEq/L', 'labs.*.min': '3.5', 'labs.*.max': '5.1',
+  'labs.*.asociacion': 'Enalapril + espironolactona; lesión renal aguda',
+  'labs.*.interpretacion': 'Hiperpotasemia: suspender espironolactona y controlar K+ diario.',
+  'meds.*.nombre': 'Enalapril', 'meds.*.casa': '10 mg VO c/12 h', 'meds.*.hosp': '10 mg VO c/12 h', 'meds.*.fuente': 'Varias fuentes',
+  'meds.*.indicacion': 'Insuficiencia cardiaca', 'meds.*.decision': 'Suspender temporalmente', 'meds.*.discrepancia': 'Discrepancia justificada',
+  'meds.*.justificacion': 'Se suspende por hiperpotasemia (K+ 5,6) y lesión renal aguda.', 'meds.*.alta': 'Reiniciar al normalizar K+ y creatinina.',
+  'cribado.c': 'INR 3,8 con claritromicina concomitante.',
+  'prm.*.med': 'Warfarina + claritromicina', 'prm.*.categoria': 'Seguridad', 'prm.*.tipo': 'Dosis demasiado alta', 'prm.*.causa': 'Interacción con medicamentos',
+  'prm.*.descripcion': 'INR supraterapéutico por interacción warfarina–claritromicina (inhibición de CYP3A4).',
+  'prm.*.evidencia': 'INR 3,8 (meta 2–3); Hb 11,8 g/dL; sin sangrado activo.',
+  'prm.*.estado': 'Real', 'prm.*.severidad': 'Moderada', 'prm.*.prioridad': 'Alta', 'prm.*.rnm': 'Seguridad: inseguridad cuantitativa',
+  'prm.*.objetivo': 'INR 2–3 sin eventos hemorrágicos en 72 h.',
+  'prm.*.intervencion': 'Omitir la dosis de warfarina hoy; cambiar claritromicina por azitromicina 500 mg VO c/24 h × 3 días.',
+  'prm.*.tipoInt': 'Sustituir medicamento', 'prm.*.comunicado': 'Médico tratante', 'prm.*.aceptada': 'Aceptada', 'prm.*.cumplido': 'Sí',
+  'prm.*.parametro': 'INR y signos de sangrado', 'prm.*.meta': 'INR 2–3', 'prm.*.frecuencia': 'Diario hasta estabilizar',
+  'paf.*.dx': 'Neumonía adquirida en la comunidad', 'paf.*.oft': 'Defervescencia y SatO₂ ≥ 92 % en 72 h.',
+  'paf.*.terapia': 'Ceftriaxona 1 g IV c/24 h + azitromicina 500 mg VO c/24 h; oxígeno; reevaluar a las 48–72 h.',
+  'paf.*.parametro': 'Temperatura, SatO₂, FR, PCR', 'paf.*.meta': 'T < 37,8 °C; SatO₂ ≥ 92 %; PCR en descenso', 'paf.*.frecuencia': 'SV c/6 h; PCR c/48 h',
+  'monitoreo.*.parametro': 'INR', 'monitoreo.*.meta': '2–3', 'monitoreo.*.frecuencia': 'Diario',
+  'monitoreo.*.r1': '06/11 – 3,8', 'monitoreo.*.r2': '07/11 – 3,1', 'monitoreo.*.r3': '08/11 – 2,6', 'monitoreo.*.r4': 'fecha – valor', 'monitoreo.*.r5': 'fecha – valor', 'monitoreo.*.r6': 'fecha – valor',
+  'egreso.*.med': 'Warfarina', 'egreso.*.dosis': '2,5 mg (media tableta)', 'egreso.*.horario': '6:00 p. m., siempre a la misma hora',
+  'egreso.*.paraQue': 'Evita que se formen coágulos por la arritmia del corazón.', 'egreso.*.ram': 'Sangrado de encías, orina rojiza, heces negras, morados.',
+  'egreso.*.consultar': 'Si sangra, se cae y se golpea la cabeza, o antes de tomar un medicamento nuevo.',
+  'recomendaciones.dieta': 'Coma porciones pequeñas varias veces al día. Reduzca la sal. Mantenga estable el consumo de verduras de hoja verde.',
+  'recomendaciones.alarma': 'Vaya a urgencias si presenta vómito con sangre, heces negras, dificultad para respirar o fiebre persistente.',
+  'recomendaciones.medicamentos': 'Tome sus medicamentos a la misma hora. No cambie dosis por su cuenta. No tome ibuprofeno ni naproxeno.',
+  'soap.s': 'Paciente refiere mejoría de la disnea y tolera la vía oral. Niega sangrado. Refiere que en casa olvida la dosis nocturna.',
+  'soap.o': 'PA 118/70 mmHg, FC 84 lpm, T 37,2 °C, SatO₂ 93 %. Cr 1,3 mg/dL, K+ 5,0 mEq/L, INR 2,9. 10 medicamentos activos; alto riesgo: warfarina, enoxaparina.',
+  'soap.a': 'NAC en mejoría. Polifarmacia excesiva (10). PRM identificados: 3. PRM-01: INR supraterapéutico por interacción (Seguridad; severidad moderada; prioridad alta)…',
+  'soap.p': '1. Ajustar warfarina según INR diario. 2. Suspender metformina (CrCl 26 mL/min). 3. Educar al cuidador sobre horarios. Seguimiento en 24 h.',
+  'revision.estado': 'Requiere ajustes',
+  'revision.comentarios': 'Buena identificación de interacciones; falta justificar la decisión sobre furosemida y priorizar los PRM.'
+};
+const exKey = path => path.startsWith('cribado.') ? (path.endsWith('|c') ? 'cribado.c' : '') : path.replace(/\.\d+\./, '.*.');
+
 /* ───────────────────────── Componentes ───────────────────────── */
 
 function control(path, t = 'text', o = {}) {
   const v = getPath(path);
-  const ph = o.ph ? ` placeholder="${esc(o.ph)}"` : '';
+  const ejemplo = UI.modo === 'experto' ? '' : EJ[exKey(path)];
+  const ex = o.ph || (ejemplo ? 'Ej.: ' + ejemplo : '');
+  const ph = ex ? ` placeholder="${esc(ex)}"` : '';
   const list = o.list ? ` list="${o.list}"` : '';
   const re = o.re ? ' data-re' : '';
   if (t === 'area') return `<textarea data-bind="${path}" rows="${o.rows || 1}"${ph}>${esc(v)}</textarea>`;
-  if (t === 'select') return `<select data-bind="${path}"${re}><option value="">—</option>${(o.o || []).map(x => `<option${x === v ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
+  if (t === 'select') return `<select data-bind="${path}"${re}><option value="">${ex ? esc(ex) : '—'}</option>${(o.o || []).map(x => `<option${x === v ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
   if (t === 'check') return `<label class="check"><input type="checkbox" data-bind="${path}"${v ? ' checked' : ''}${re}> ${esc(o.cl || '')}</label>`;
   const type = t === 'num' ? 'number' : t === 'date' ? 'date' : 'text';
   const step = t === 'num' ? ' step="any" inputmode="decimal"' : '';
@@ -448,7 +507,7 @@ function secPaciente() {
   return secHead('Datos del paciente', 'Recolección de información (Collect)') +
     hint('<b>Recolectar:</b> obtenga información de al menos dos fuentes (paciente, cuidador, historia clínica, fórmulas, dispensación). Registre peso, talla, sexo, edad y creatinina: con ellos se calcula la función renal que usan las alertas de ajuste de dosis.') +
     `<section class="card"><h3>Identificación</h3><div class="grid g4">
-      ${f('nombre', 'Nombre o iniciales', 'text', { cls: 'span2', ph: 'Use iniciales en equipos compartidos' })}${f('documento', 'Documento / N.º historia')}${f('aseguradora', 'EPS / aseguradora')}
+      ${f('nombre', 'Nombre o iniciales', 'text', { cls: 'span2' })}${f('documento', 'Documento / N.º historia')}${f('aseguradora', 'EPS / aseguradora')}
       ${f('edad', 'Edad (años)', 'num')}${f('sexo', 'Sexo', 'select', { o: OPT.sexo })}${f('peso', 'Peso (kg)', 'num')}${f('talla', 'Talla (cm)', 'num')}
       ${f('servicio', 'Servicio')}${f('cama', 'Cama')}${f('fechaIngreso', 'Fecha de ingreso', 'date')}${f('fechaValoracion', 'Fecha de valoración', 'date')}
       ${f('gestacion', 'Embarazo / lactancia', 'select', { o: OPT.gestacion })}
@@ -457,7 +516,7 @@ function secPaciente() {
       ${f('motivo', 'Motivo de consulta / valoración', 'area', { rows: 2 })}
       ${f('enfermedadActual', 'Enfermedad actual', 'area', { rows: 2 })}
       ${f('antecedentes', 'Antecedentes (patológicos, quirúrgicos, farmacológicos, familiares)', 'area', { rows: 2 })}
-      ${f('alergias', 'Alergias e intolerancias (medicamento y tipo de reacción)', 'area', { rows: 2, ph: 'Ej.: penicilina — urticaria. Escriba "niega" si no tiene.' })}
+      ${f('alergias', 'Alergias e intolerancias (medicamento y tipo de reacción)', 'area', { rows: 2 })}
       ${f('habitos', 'Hábitos (tabaco, alcohol, SPA, dieta, actividad física)', 'area', { rows: 2 })}
       ${f('social', 'Determinantes sociales (escolaridad, red de apoyo, acceso a medicamentos, cuidador)', 'area', { rows: 2 })}
     </div></section>
@@ -547,7 +606,7 @@ function secCribado() {
     hint('<b>Evaluar:</b> responda cada pregunta para cada medicamento (Sí / No / <b>FI</b> = falta información). Las respuestas en rojo indican un posible PRM y aparecen como alertas en <b>PRM e intervenciones</b>, desde donde puede registrarlo con un clic.') +
     `<section class="card"><div class="tbl-wrap"><table class="ed mx"><thead><tr><th class="q">Pregunta</th>${act.map(m => `<th>${esc(m.nombre)}</th>`).join('')}</tr></thead><tbody>
     ${PREGUNTAS.map(([q, malo], qi) => `<tr><td>${qi + 1}. ${q}</td>${act.map(m => cell(m, qi, malo)).join('')}</tr>`).join('')}
-    <tr><td><b>Comentario</b></td>${act.map(m => `<td>${control(`cribado.${m.id}|c`, 'area', { ph: 'Observaciones' })}</td>`).join('')}</tr>
+    <tr><td><b>Comentario</b></td>${act.map(m => `<td>${control(`cribado.${m.id}|c`, 'area')}</td>`).join('')}</tr>
     </tbody></table></div></section>`;
 }
 
@@ -615,7 +674,7 @@ function secMonit() {
     { k: 'parametro', l: 'Parámetro', w: '160px' },
     { k: 'meta', l: 'Meta', w: '120px' },
     { k: 'frecuencia', l: 'Frecuencia', w: '120px' },
-    ...[1, 2, 3, 4, 5, 6].map(n => ({ k: 'r' + n, l: `Registro ${n}`, w: '120px', ph: 'fecha – valor' }))
+    ...[1, 2, 3, 4, 5, 6].map(n => ({ k: 'r' + n, l: `Registro ${n}`, w: '120px' }))
   ];
   return secHead('Monitoreo y seguimiento', 'Follow-up: monitorear y evaluar') +
     hint('<b>Seguir:</b> registre los valores de cada parámetro en el tiempo (fecha – valor) para evaluar si se cumplen los objetivos del PAF y de los PRM.') +
@@ -716,7 +775,13 @@ function renderHeader() {
   $('#mFormacion').classList.toggle('on', UI.modo !== 'experto');
   $('#mExperto').classList.toggle('on', UI.modo === 'experto');
 }
-function autosize(t) { t.style.height = 'auto'; t.style.height = t.scrollHeight + 2 + 'px'; }
+function autosize(t) {
+  // si está vacío, mide el ejemplo para que se lea completo
+  const vacio = !t.value && t.placeholder;
+  if (vacio) t.value = t.placeholder;
+  t.style.height = 'auto'; t.style.height = t.scrollHeight + 2 + 'px';
+  if (vacio) t.value = '';
+}
 function render(keepScroll = true) {
   const y = window.scrollY;
   const sec = SECS.find(s => s.id === UI.sec) || SECS[0];
@@ -775,7 +840,7 @@ function genSoap() {
 function addRow(key, data) { S[key].push({ ...ROW[key](), ...(data || {}) }); touch(); }
 
 const ACTIONS = {
-  mode(btn) { UI.modo = btn.dataset.mode; store(UI_KEY, UI); renderHeader(); toast(UI.modo === 'experto' ? 'Modo formado: se ocultan las guías' : 'Modo en formación: guías y revisión del tutor visibles'); },
+  mode(btn) { UI.modo = btn.dataset.mode; store(UI_KEY, UI); render(); toast(UI.modo === 'experto' ? 'Modo formado: se ocultan guías y ejemplos' : 'Modo en formación: guías, ejemplos y revisión del tutor visibles'); },
   new() { if (!confirm('¿Iniciar un caso nuevo? Se borrará el caso actual de este navegador (exporte un respaldo .json si lo necesita).')) return; S = hydrate(null); store(STORE_KEY, S); go('paciente'); toast('Caso nuevo'); },
   example() { if (!confirm('¿Cargar el caso de ejemplo? Reemplaza el caso actual.')) return; S = hydrate(exampleCase()); store(STORE_KEY, S); go('concil'); toast('Caso de ejemplo cargado (ficticio)'); },
   import() { $('#fileIn').click(); },
